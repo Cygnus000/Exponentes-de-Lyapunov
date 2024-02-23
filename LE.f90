@@ -1,5 +1,4 @@
 !/*************************************************/
-!/*************************************************/
 !/**** Calculo de los Exponentes de Lyapunov   ****/
 !/****        con el metodo de Benettin        ****/
 !/****         para el Modelo de Lorenz        ****/
@@ -9,7 +8,7 @@
 !/****      algunos datos cada valor de IO     ****/
 !/*************************************************/
 !/********     Ricardo Becerril Bárcenas   ********/
-!/********     Re-escrito Diciembre 2023   ********/
+!/********  Luis Fernando Cisneros Chavez  ********/
 !/*************************************************/
 program lyapunovExponents
     use, intrinsic :: iso_fortran_env, only: qp=>real128
