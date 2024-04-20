@@ -1,84 +1,80 @@
-!/*************************************************/
-!/**** Calculo de los Exponentes de Lyapunov   ****/
-!/****        con el metodo de Benettin        ****/
-!/****         para el Modelo de Lorenz        ****/
-!/****    Se obtiene Lambda1, Lambda2, Lambda3 ****/
-!/****  Para un solo valor de R y se ve como   ****/
-!/****     va convergiendo, se imprime solo    ****/
-!/****      algunos datos cada valor de IO     ****/
-!/*************************************************/
-!/********     Ricardo Becerril Bárcenas   ********/
-!/********  Luis Fernando Cisneros Chavez  ********/
-!/*************************************************/
-program lyapunovExponents
+program EspectroLyapunov
     use, intrinsic :: iso_fortran_env, only: qp=>real128
     implicit none
     integer , parameter :: N_equ = 3    ! Numero de ecuaciones
     integer , parameter :: N_equ2 = 12
-    real(qp) :: SIGMA,B, RR, dt, t, x0, y0, z0, Ntot
+    real(qp) :: a,b,c,d,e,ff,gg,h, dt, dr, t, x0, y0, z0, Ntot, RR
+    real(qp) :: R_max,R_min
+    real(qp) :: x00, y00, z00
     real(qp) :: cum(N_equ),yL(N_equ),y(N_equ2)
     real(qp) :: v1(N_equ),v2(N_equ),v3(N_equ),V11(N_equ),V22(N_equ)
     real(qp) :: V33(N_equ),N(N_equ)
-    integer  :: i, j, k, Ntrans, m, Nr, ntau, IO
-!**********************************************************************    
-    call parametros()                                      ! parametros
+    integer  :: i, j, k, Ntrans, m, Nr, ntau, IO, rrr, g
+!**********************************************************************
+    call parametros()                           ! entrada de parametros
 !**********************************************************************
     Ntot=Nr*ntau                                          ! transitorio
-    yL = [ x0 , y0 , z0 ]
+!    open(1,file='LE_trans1.dat') !-
+    RRR=int((R_max-R_min)/dr)
+    open(3,file='Espectro1.dat')
+    do g = 0, RRR
+    yL = [ x00 , y00 , z00 ]
     t=0._qp
-    
-    open(1,file='LE_trans.dat')
-    do i = 1, Ntrans
-        yL = yL + rk4( yL, t, dt, N_equ )
-        t = t + dt
-        write(1,*) t, yL
-    end do
-    close(1) 
-!    call system('gnuplot -c LE_trans.p')
-    x0=yL(1)                                      ! Fin del transitorio
-    y0=yL(2)
-    z0=yL(3)
-    t=0._qp
-    print '(AX,F10.5x,F10.5,F10.5,F10.5)','iniciaremos el calculo en',x0,y0,z0,t
-!**********************************************************************
-    y(1)=x0                                     ! Calculo de Exponentes
-    y(2)=y0  ! valores iniciales
-    y(3)=z0
-    cum=0._qp
-    do k=4, N_equ2
-        y(k)=0._qp
-    enddo
-    y(4)=1._qp; y(8)=1._qp; y(12)=1._qp
-
-    open(2,file='LE_.dat')
-    do m=1,Nr
-        do j=1,ntau
-            y = y + rk4( y, t, dt, N_equ2 )
+    RR=R_min + dr*g
+        do i = 1, Ntrans
+            yL = yL + rk4( yL, t, dt, N_equ )
             t = t + dt
+            write(1,*) t, yL !-
+        end do
+        close(1)           !-
+    !    call system('gnuplot -c LE_trans.p')
+        x0=yL(1)                                  ! Fin del transitorio
+        y0=yL(2)
+        z0=yL(3)       ! Guardando valores finales
+        t=0._qp
+!        print '(AX,F10.5x,F10.5,F10.5,F10.5)','iniciaremos el calculo en',x0,y0,z0,t
+!**********************************************************************
+        y(1)=x0                                 ! Calculo de Exponentes
+        y(2)=y0  ! valores iniciales
+        y(3)=z0
+        cum=0._qp
+        do k=4, N_equ2
+            y(k)=0._qp
         enddo
-        do k=1,3
-            v1(k)=y(3*k+1)  ! v1(1)= y(4)  v1(2)= y(7)  v1(3)= y(10)  
-            v2(k)=y(3*k+2)  ! v2(1)= y(5)  v2(2)= y(8)  v1(3)= y(11)  
-            v3(k)=y(3*k+3)  ! v3(1)= y(6)  v3(2)= y(9)  v3(3)= y(12)  
+        y(4)=1._qp; y(8)=1._qp; y(12)=1._qp ! Cambiando a sis de 12 dim
+
+!        open(2,file='LyaExp1.dat')    !- Avanzando ntau pasos con rk4
+        do m=1,Nr
+            do j=1,ntau
+                y = y + rk4( y, t, dt, N_equ2 )
+                t = t + dt
+            enddo
+            do k=1,3
+                v1(k)=y(3*k+1)  ! v1(1)=y(4)  v1(2)=y(7)  v1(3)=y(10)
+                v2(k)=y(3*k+2)  ! v2(1)=y(5)  v2(2)=y(8)  v1(3)=y(11)
+                v3(k)=y(3*k+3)  ! v3(1)=y(6)  v3(2)=y(9)  v3(3)=y(12)
+            enddo
+            call OGS(v1,v2,v3,V11,V22,V33,N)  ! ortonormalizacion de GS
+            !print'(F10.5X,F10.5X,F10.5)',N
+            cum = cum + log(N)
+            if(mod(m,IO) .eq. 0 .or. m .eq. Nr) then  
+!                write(2,*) t-dt, cum/t            
+                print   *, t-dt, cum/t            
+            endif                                 
+
+            do k=1,3
+               y(3*k+1)=V11(k) ! y(4)=V11(1)  y(7)=V11(2)  y(10)=V11(3)
+               y(3*k+2)=V22(k) ! y(5)=V22(1)  y(8)=V22(2)  y(11)=V22(3)
+               y(3*k+3)=V33(k) ! y(6)=V33(1)  y(9)=V33(2)  y(12)=V33(3)
+            enddo
         enddo
-        call OGS(v1,v2,v3,V11,V22,V33,N)  ! ortonormalizacion de GS
-        !print'(F10.5X,F10.5X,F10.5)',N
-        cum = cum + log(N)
-        if(mod(m,IO).eq.0 .or. m.eq.Nr) then
-            write(2,*) t-dt, cum/t
-           ! print   *, t-dt, cum/t
-        endif
-        
-        do k=1,3
-            y(3*k+1)=V11(k) !y(4)= V11(1)  y(7)= V11(2)  y(10)= V11(3)
-            y(3*k+2)=V22(k) !y(5)= V22(1)  y(8)= V22(2)  y(11)= V22(3)
-            y(3*k+3)=V33(k) !y(6)= V33(1)  y(9)= V33(2)  y(12)= V33(3)
-        enddo
-        
+    print'(AX,F10.5X,F10.5X,F10.5)','Exponentes',cum/t
+!    close(2)           !-
+    write(3,*) rr, cum/t
     enddo
-    close(2)    
-    print'(AX,F10.5X,AX,F10.5X,AX,F10.5)','los exponentes son L1',cum(1)/t,'L2',cum(2)/t,'L3',cum(3)/t
-!    call system('gnuplot -c LE_.p')
+    close(3)
+   ! call system('gnuplot -c LyaExp.p')
+!    call system('gnuplot -c Espectro.p')
 !**********************************************************************
 contains
 !**********************************************************************
@@ -89,22 +85,22 @@ contains
         real(qp) :: f(Nequ)
         real(qp) :: u, v, w
         real(qp) :: J(3,3),M(3,3),P(3,3)
-        integer  :: aa, bb, cc 
+        integer  :: aa, bb, cc
 
         u = r(1)
         v = r(2)
         w = r(3)
 
-        f(1) = SIGMA*(v-u)
-        f(2) = RR*u - v - u*w
-        f(3) = u*v - B*w
-        
+  f(1) = u*(1.0-u) - a*u*v - b*u*w
+  f(2) = RR*v*(1.0-v) - d*u*v
+  f(3) = (e*u*w)/(u+ff) - gg*u*w - h*w
+
         if(Nequ.gt.3) then
-        
-        J(1,1) = -SIGMA; J(1,2) =  SIGMA; J(1,3) = 0._qp
-        J(2,1) =  RR-w ; J(2,2) = -1._qp; J(2,3) = -u
-        J(3,1) =     v ; J(3,2) =  u    ; J(3,3) = -B
-        
+
+        J(1,1) = 1._qp - 2._qp*u - a*v - b*w;            J(1,2)= -a*u;                J(1,3)= -b*u
+        J(2,1) = -d*v;                                   J(2,2)= RR - 2._qp*c*v - d*u; J(2,3)= 0.0_qp
+        J(3,1) = (e*w/(u+ff))*(1._qp-(u/(u+ff))) - gg*w; J(3,2)= 0._qp;               J(3,3)= (e*u/(u+ff)) - gg*u - h
+
         M(1,1) =  r(4); M(1,2) =  r(5); M(1,3) =  r(6)
         M(2,1) =  r(7); M(2,2) =  r(8); M(2,3) =  r(9)
         M(3,1) = r(10); M(3,2) = r(11); M(3,3) = r(12)
@@ -117,11 +113,11 @@ contains
                 enddo
             enddo
         enddo
-        
+
          f(4) = P(1,1);  f(5) = P(1,2);  f(6) = P(1,3)
          f(7) = P(2,1);  f(8) = P(2,2);  f(9) = P(2,3)
         f(10) = P(3,1); f(11) = P(3,2); f(12) = P(3,3)
-        
+
         endif
 
     end function f
@@ -132,7 +128,7 @@ contains
         real(qp), intent(in) :: dt   ! Tamano de paso
         integer , intent(in) :: Nequ
         real(qp)  :: rk4(Nequ)
-        real(qp)  :: k1(Nequ), k2(Nequ), k3(Nequ), k4(Nequ)   
+        real(qp)  :: k1(Nequ), k2(Nequ), k3(Nequ), k4(Nequ)
 
         k1 = dt * f( r              , t              , Nequ )
         k2 = dt * f( r + 0.5_qp * k1, t + 0.5_qp * dt, Nequ )
@@ -147,15 +143,15 @@ contains
         real(qp), intent(out)   :: V11(N_equ),V22(N_equ),V33(N_equ)
         real(qp), intent(inout) :: N(N_equ)
         real(qp) :: Coef21, Coef31, Coef32
-        
+
         N(1) = norma(v1)
         V11 = v1/N(1)
-        
+
         Coef21 = producto_punto(v2,V11)
         V22 = v2 - Coef21*V11
         N(2) = norma(V22)
         V22 = V22/N(2)
-        
+
         Coef31 = producto_punto(v3,V11)
         Coef32 = producto_punto(v3,V22)
         V33 = v3 - Coef31*V11 - Coef32*V22
@@ -164,17 +160,22 @@ contains
     end subroutine OGS
 !**********************************************************************
     subroutine parametros()
-        read *, SIGMA,B,RR
-        read *, dt
+        read *, a,b,c,d,e,ff,gg,h
+        read *, R_min, R_max
+        read *, dt, dr
         read *, Nr,ntau
         read *, IO
-        read *, x0,Y0,z0
+        read *, x00,y00,z00
         read *, Ntrans
-        print '(AX,F10.5X,AX,F10.5X,AX,F10.5)','sigma',SIGMA,'B',B,'r',RR
-        print '(AX,F10.5)', 'dt', dt
+
+        print '(AX,F10.5X,AX,F10.5X,AX,F10.5)','a',a,'b',b,'c',c
+        print '(AX,F10.5X,AX,F10.5X,AX,F10.5)','d',d,'e',e,'f',ff
+        print '(AX,F10.5X,AX,F10.5)','g',gg,'h',h
+        print '(AX,F10.5X,AX,F10.5)', 'R_min', R_min, 'R_max', R_max
+        print '(AX,F10.5X,AX,F10.5)', 'dt', dt, 'dr', dr
         print '(AX,I20X,AX,I20)', 'Nr',Nr,'ntau', ntau
         print '(AX,I20)','IO', IO
-        print '(AX,F10.5X,AX,F10.5X,AX,F10.5)', 'x0',x0,'y0',Y0,'z0',z0
+        print '(AX,F10.5X,AX,F10.5X,AX,F10.5)','x0',x00,'y0',y00,'z0',z00
         print '(AX,I20)','ntrans',Ntrans
     end subroutine parametros
 !**********************************************************************
@@ -199,4 +200,4 @@ contains
         enddo
     end function producto_punto
 !**********************************************************************
-end program lyapunovExponents
+end program EspectroLyapunov
