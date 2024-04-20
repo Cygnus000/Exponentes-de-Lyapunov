@@ -1,5 +1,5 @@
 # Exponentes-de-Lyapunov
-Código Fortran que implementa el método de Benettin para realizar el cálculo de los exponentes de Lyapunov y posteriormente seleccionando un parámetro del modelo ('a') realiza un espectro de los Exponentes de Lyapunov
+Código Fortran que implementa el método de Benettin para realizar el cálculo de los exponentes de Lyapunov y posteriormente seleccionando un parámetro del modelo ('a' y posteriormente 'c') realiza un espectro de los Exponentes de Lyapunov
 
 ```math
 \begin{gathered}
