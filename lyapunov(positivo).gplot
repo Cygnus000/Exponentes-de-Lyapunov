@@ -1,8 +1,0 @@
-set terminal pngcairo size 1200,750 enhanced font 'Verdana,23'
-set output 'lyapunov-c(positivo).png'
-set title "Exponentes Caracteristicos de Lyapunov"
-set xlabel "Parámetro c"
-set ylabel "Exponentes"
-set grid
-set key right top
-plot "Espectro_Cancer0.dat" u 1:($2>0?$2:1/0) w l lt 6 title "\lambda positivo"
