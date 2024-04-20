@@ -9,4 +9,6 @@ Código Fortran que implementa el método de Benettin para realizar el cálculo 
 \end{gathered} 
 ```
 Este sistema es el mostrado en Itik, M., & Banks, S. P. (2010). Chaos in a three-dimensional cancer model. International Journal of Bifurcation and Chaos, 20(01), 71-79. https://doi.org/10.1142/S0218127410025417
-![Espectro de los Exponentes Caracteristicos de Lyapunov](https://github.com/Cygnus000/Exponentes-de-Lyapunov/blob/main/Espectro_a12.png)
+![Espectro de los Exponentes Caracteristicos de Lyapunov](https://github.com/Cygnus000/Exponentes-de-Lyapunov/blob/main/lyapuniv-c.png)
+![Espectro de los Exponentes Caracteristicos de Lyapunov](https://github.com/Cygnus000/Exponentes-de-Lyapunov/blob/main/lyapuniv-c(puntos).png)
+![Espectro de los Exponentes Caracteristicos de Lyapunov](https://github.com/Cygnus000/Exponentes-de-Lyapunov/blob/main/lyapuniv-c(positivo).png)
